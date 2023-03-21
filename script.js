@@ -7,9 +7,10 @@ const data = window.data;
 /***Before we can begin manipulating the DOM we need to gain access to two DOM Nodes***/
 // 1. Declare a variable bigCoffee that holds reference to the element with id 'big_coffee'.
 // your code here
-
+const bigCoffee=document.getElementById("big_coffee")
 // 2. Declare a variable producerContainer that holds reference to the element with id 'producer_container'.
 // your code here
+const producerContainer=document.getElementById("producer_container")
 
 /***Don't worry about the specifics of the condition in this if statement for now.
  * Just follow the instructions in it to ensure the application has base functionality.
@@ -22,11 +23,11 @@ if (typeof process === 'undefined') {
   /* 1. Add a 'click' event listener to the bigCoffee element(giant coffee emoji) you referenced above.
    * It should call the clickCoffee function below and be passed the global data object.*/
   // your code here
-
+bigCoffee.addEventListener("click", (event)=>{clickCoffee(data)})
   /* 2. Add a 'click' event listener to the producerContainer(Coffee Producers panel) you referenced above.
    * It should call the buyButtonClick function below and be passed the browser event and global data object.*/
   // your code here
-
+producerContainer.addEventListener("click", (event)=>{buyButtonClick(event, data)})
   // You don't need to edit this line of code. It calls the tick function passing in the data object every 1000ms or 1s.
   setInterval(() => tick(data), 1000);
 }
@@ -39,10 +40,16 @@ if (typeof process === 'undefined') {
 
 function updateCoffeeView(coffeeQty) {
   // your code here
+  let coffeeCounter= document.getElementById("coffee_counter");
+  coffeeCounter.innerText=coffeeQty;
+  
 }
 
 function clickCoffee(data) {
   // your code here
+  data.coffee++;
+  updateCoffeeView(data.coffee);
+  renderProducers(data);
 }
 
 /**************
@@ -51,13 +58,23 @@ function clickCoffee(data) {
 
 function unlockProducers(producers, coffeeCount) {
   // your code here
+  producers.forEach(element=>{
+  if(coffeeCount>=element.price/2){
+    element.unlocked=true;
+  }
+}
+)
 }
 
 function getUnlockedProducers(data) {
   // your code here
-}
+const showUnlocked=data.producers.filter(element=>element.unlocked===true)
+return showUnlocked}
 
 function makeDisplayNameFromId(id) {
+  const newWord = id.split('_');
+  const titleCase = newWord.map(element => element.charAt(0).toUpperCase() + element.slice(1)).join(" ");
+  return titleCase;
   // your code here
 }
 
@@ -84,10 +101,21 @@ function makeProducerDiv(producer) {
 
 function deleteAllChildNodes(parent) {
   // your code here
+  while(parent.firstChild){
+    parent.removeChild(parent.firstChild);
+  }
 }
 
 function renderProducers(data) {
   // your code here
+  let producerContainer = document.getElementById("producer_container");
+  deleteAllChildNodes(producerContainer);
+  unlockProducers(data.producers, data.coffee);
+  for(let i=0; i<data.producers.length; i++){
+    if(data.producers[i].unlocked === true){
+      producerContainer.appendChild(makeProducerDiv(data.producers[i]));
+    }
+  }
 }
 
 /**************
@@ -96,30 +124,65 @@ function renderProducers(data) {
 
 function getProducerById(data, producerId) {
   // your code here
+let producer=data.producers.filter((producer)=>producer.id===producerId);
+return producer[0];
 }
 
 function canAffordProducer(data, producerId) {
   // your code here
+  if (data.coffee > getProducerById(data, producerId).price) {
+    return true;
+  }
+ else {
+  return false;
+ }
 }
 
 function updateCPSView(cps) {
+  let CPS=document.getElementById("cps");
+  CPS.innerText=cps;
   // your code here
 }
 
 function updatePrice(oldPrice) {
   // your code here
+  return Math.floor(oldPrice*1.25)
 }
 
 function attemptToBuyProducer(data, producerId) {
   // your code here
+  let producer = getProducerById(data, producerId)
+  if(data.coffee > producer.price){
+    data.coffee -= producer.price;
+    data.totalCPS += producer.cps;
+    producer.qty ++;
+    producer.price = Math.floor(producer.price * 1.25);
+    return true;
+  } else {
+    return false;
+  }
 }
 
 function buyButtonClick(event, data) {
+  if(event.target.tagName === "BUTTON"){
+    const producerId = event.target.id.slice(4)
+    if(attemptToBuyProducer(data, producerId)){
+renderProducers(data);
+updateCoffeeView(data.coffee)
+updateCPSView(data.totalCPS)
+    } else {
+      window.alert("Not enough coffee!");
+    }
+  }
   // your code here
+
 }
 
 function tick(data) {
   // your code here
+  data.coffee+=data.totalCPS;
+  updateCoffeeView(data.coffee);
+  renderProducers(data);
 }
 
 /**********************************
